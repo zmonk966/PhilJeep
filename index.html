@@ -40,7 +40,7 @@
     </div>
 
     <script type="module">
-        // FIXED IMPORTS - These must have .js at the end
+        // FIXED IMPORTS
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -52,17 +52,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 1. ROUTE SETUP
+        // 1. Setup Route from URL
         const params = new URLSearchParams(window.location.search);
         const myRoute = params.get('route') || 'punta-quiapo';
         document.getElementById("route-name").innerText = myRoute.replace('-', ' ').toUpperCase();
 
-        // 2. PERSONAL TICKET LOGIC
+        // 2. Ticket Logic
         const savedTicket = localStorage.getItem('user_ticket_' + myRoute);
         if (savedTicket) { showTicket(savedTicket); }
 
         document.getElementById("ticket-btn").addEventListener("click", () => {
-            const newTicket = Math.floor(Math.random() * 99) + 1;
+            // FIX: Math.floor(Math.random() * 100) starts the range from 0 to 99
+            const newTicket = Math.floor(Math.random() * 100); 
             localStorage.setItem('user_ticket_' + myRoute, newTicket);
             showTicket(newTicket);
         });
@@ -75,7 +76,7 @@
             display.style.display = "block";
         }
 
-        // 3. FIREBASE LISTENER
+        // 3. Real-time Firebase Listener
         onValue(ref(db, 'routes/' + myRoute), (snapshot) => {
             const data = snapshot.val();
             if (data) {
