@@ -3,64 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhilJeep - Commuter View</title>
+    <title>PhilJeep - Commuter Board</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f8f0ff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { width: 90%; max-width: 400px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 15px 35px rgba(75, 0, 130, 0.1); text-align: center; border: 2px solid #4B0082; }
-        .status-box { background: #4B0082; color: white; padding: 20px; border-radius: 15px; margin: 20px 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f0ff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { width: 100%; max-width: 400px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 15px 35px rgba(75, 0, 130, 0.1); text-align: center; border: 2px solid #4B0082; }
+        
+        #route-name { color: #4B0082; text-transform: uppercase; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; }
+        
+        /* Terminal Status */
+        .status-box { background: #4B0082; color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        #loading-val { font-size: 3.5rem; margin: 10px 0; color: #FFD700; }
+        
+        /* Personal Ticket Section */
+        .my-ticket-section { border: 2px dashed #4B0082; padding: 15px; border-radius: 15px; margin-bottom: 20px; background: #fffdf0; }
+        #ticket-num-display { font-size: 2.5rem; font-weight: bold; color: #4B0082; margin: 5px 0; display: none; }
+        .btn-ticket { background: #FFD700; color: #4B0082; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+        
+        /* ETA Section */
         .eta-box { border: 2px solid #FFD700; padding: 15px; border-radius: 15px; color: #4B0082; }
-        #route-name { color: #4B0082; text-transform: uppercase; font-weight: bold; font-size: 1.2rem; }
-        h1 { margin: 10px 0; font-size: 3rem; }
+        #eta-val { margin: 5px 0; color: #d32f2f; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div id="route-name">Detecting Route...</div>
+
         <div class="status-box">
-            <small>NOW LOADING TICKET #</small>
-            <h1 id="loading-val">--</h1>
-        </div>
-        <div class="eta-box">
-            <p style="margin:0">Next Jeep Arrival:</p>
-            <h2 id="eta-val" style="margin:0">WAITING...</h2>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // Your verified Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyBqw_UnppBjz5qzMjHpusuuqMzMGN3HF-k",
-            databaseURL: "https://philjeep-386fc-default-rtdb.asia-southeast1.firebasedatabase.app/"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // 1. Get route from URL (e.g., ?route=punta-quiapo)
-        const params = new URLSearchParams(window.location.search);
-        const myRoute = params.get('route') || 'punta-quiapo';
-        document.getElementById("route-name").innerText = myRoute.replace('-', ' ');
-
-        // 2. Real-time Listener
-        const routeRef = ref(db, 'routes/' + myRoute);
-        onValue(routeRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // Update text only if data exists in Firebase
-                document.getElementById("loading-val").innerText = data.now_loading || "N/A";
-                document.getElementById("eta-val").innerText = (data.eta || "0") + " MINS";
-            } else {
-                // Default display if no data is found for this route
-                document.getElementById("loading-val").innerText = "EMPTY";
-                document.getElementById("eta-val").innerText = "NO DATA";
-            }
-        }, (error) => {
-            console.error("Firebase error:", error);
-            document.getElementById("route-name").innerText = "Connection Error";
-        });
-    </script>
-</body>
-</html>
+            <small>NOW LOADING TICKETS:</small>
