@@ -52,18 +52,13 @@
         const savedTicket = localStorage.getItem('user_ticket_' + myRoute);
         if (savedTicket) { showTicket(savedTicket); }
 
-        // SEQUENTIAL TICKET LOGIC
         document.getElementById("ticket-btn").addEventListener("click", () => {
             const counterRef = ref(db, 'routes/' + myRoute + '/next_ticket');
-            
-            runTransaction(counterRef, (currentValue) => {
-                if (currentValue === null) return 1; // Start at 1
-                if (currentValue >= 99) return 1; // Reset to 1 after 99
-                return currentValue + 1; // Increment by 1
-            }).then((result) => {
-                const assignedNum = result.snapshot.val() - 1 || 1; 
-                localStorage.setItem('user_ticket_' + myRoute, assignedNum);
-                showTicket(assignedNum);
+            runTransaction(counterRef, (curr) => (curr === null || curr >= 99) ? 1 : curr + 1)
+            .then((result) => {
+                const num = result.snapshot.val() - 1 || 1;
+                localStorage.setItem('user_ticket_' + myRoute, num);
+                showTicket(num);
             });
         });
 
@@ -75,21 +70,31 @@
             display.style.display = "block";
         }
 
-        // Real-time Listener with Auto-Reset
         onValue(ref(db, 'routes/' + myRoute + '/status'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const currentLoading = data.now_loading || "--";
-                document.getElementById("loading-val").innerText = currentLoading;
+                const loadingText = data.now_loading || "--";
+                document.getElementById("loading-val").innerText = loadingText;
                 document.getElementById("eta-val").innerText = (data.eta || "0") + " MINS";
 
-                const mySavedTicket = localStorage.getItem('user_ticket_' + myRoute);
-                if (mySavedTicket && currentLoading.includes(mySavedTicket)) {
-                    setTimeout(() => {
-                        localStorage.removeItem('user_ticket_' + myRoute);
-                        alert("Ticket #" + mySavedTicket + " loaded! Safe travels.");
-                        location.reload();
-                    }, 5000);
+                const myTicket = parseInt(localStorage.getItem('user_ticket_' + myRoute));
+                if (!isNaN(myTicket)) {
+                    // Logic to check if ticket is in range (e.g., "1-10")
+                    let isMatch = false;
+                    if (loadingText.includes("-")) {
+                        const [start, end] = loadingText.split("-").map(n => parseInt(n.trim()));
+                        if (myTicket >= start && myTicket <= end) isMatch = true;
+                    } else if (parseInt(loadingText) === myTicket) {
+                        isMatch = true;
+                    }
+
+                    if (isMatch) {
+                        setTimeout(() => {
+                            localStorage.removeItem('user_ticket_' + myRoute);
+                            alert("Ticket #" + myTicket + " loaded! Safe travels.");
+                            location.reload();
+                        }, 4000);
+                    }
                 }
             }
         });
