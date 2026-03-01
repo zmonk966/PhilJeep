@@ -10,14 +10,15 @@
         
         #route-name { color: #4B0082; text-transform: uppercase; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; }
         
-        /* Terminal Status */
+        /* Terminal Status Section */
         .status-box { background: #4B0082; color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
         #loading-val { font-size: 3.5rem; margin: 10px 0; color: #FFD700; }
         
-        /* Personal Ticket Section */
+        /* Personal Ticket Section (The Fix) */
         .my-ticket-section { border: 2px dashed #4B0082; padding: 15px; border-radius: 15px; margin-bottom: 20px; background: #fffdf0; }
         #ticket-num-display { font-size: 2.5rem; font-weight: bold; color: #4B0082; margin: 5px 0; display: none; }
-        .btn-ticket { background: #FFD700; color: #4B0082; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn-ticket { background: #FFD700; color: #4B0082; border: none; padding: 15px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; }
+        .btn-ticket:hover { background: #e6c200; }
         
         /* ETA Section */
         .eta-box { border: 2px solid #FFD700; padding: 15px; border-radius: 15px; color: #4B0082; }
@@ -31,3 +32,11 @@
 
         <div class="status-box">
             <small>NOW LOADING TICKETS:</small>
+            <h1 id="loading-val">--</h1>
+        </div>
+
+        <div class="my-ticket-section">
+            <p id="ticket-label" style="margin:0; font-size: 0.9rem; font-weight: bold;">Ticket Status:</p>
+            <div id="ticket-num-display">#--</div>
+            <button class="btn-ticket" id="ticket-btn">GET TICKET NUMBER</button>
+        </div>
