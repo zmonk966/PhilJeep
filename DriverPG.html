@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Console - Barkada-Bot</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f4f0ff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: #4B0082;
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 20px;
+            background: #FFD700;
+            color: #4B0082;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>Driver Control</h2>
+        <label>Select Route:</label>
+        <select id="routeSelect">
+            <option value="punta-quiapo">Punta to Quiapo</option>
+            <option value="lealtad-quiapo">Lealtad to Quiapo</option>
+        </select>
+
+        <label>Now Loading (e.g. 1-15):</label>
+        <input type="text" id="loadingRange" placeholder="1-15">
+
+        <label>ETA (minutes):</label>
+        <input type="number" id="etaTime" placeholder="5">
+
+        <button onclick="updateTerminal()">📢 SIGNAL ARRIVAL</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqw_UnppBjz5qzMjHpusuuqMzMGN3HF-k",
+            databaseURL: "https://philjeep-386fc-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.updateTerminal = function () {
+            const route = document.getElementById("routeSelect").value;
+            const loading = document.getElementById("loadingRange").value;
+            const eta = document.getElementById("etaTime").value;
+
+            set(ref(db, 'routes/' + route), {
+                now_loading: loading,
+                eta: eta,
+                last_updated: Date.now()
+            }).then(() => alert("Route " + route + " Updated!"));
+        }
+    </script>
+</body>
+
+</html>
