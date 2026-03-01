@@ -12,27 +12,22 @@
         #loading-val { font-size: 3.5rem; margin: 10px 0; color: #FFD700; }
         .my-ticket-section { border: 2px dashed #4B0082; padding: 15px; border-radius: 15px; margin-bottom: 20px; background: #fffdf0; }
         #ticket-num-display { font-size: 2.5rem; font-weight: bold; color: #4B0082; margin: 5px 0; display: none; }
-        .btn-ticket { background: #FFD700; color: #4B0082; border: none; padding: 15px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; }
+        .btn-ticket { background: #FFD700; color: #4B0082; border: none; padding: 15px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
         .eta-box { border: 2px solid #FFD700; padding: 15px; border-radius: 15px; color: #4B0082; }
-        #eta-val { margin: 5px 0; color: #d32f2f; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <div id="route-name">Detecting Route...</div>
-
         <div class="status-box">
             <small>NOW LOADING TICKETS:</small>
             <h1 id="loading-val">--</h1>
         </div>
-
         <div class="my-ticket-section">
             <p id="ticket-label" style="margin:0; font-size: 0.9rem; font-weight: bold;">Ticket Status:</p>
             <div id="ticket-num-display">#--</div>
             <button class="btn-ticket" id="ticket-btn">GET TICKET NUMBER</button>
         </div>
-
         <div class="eta-box">
             <p style="margin:0; font-size: 0.9rem;">Next Jeep Arrival:</p>
             <h2 id="eta-val">CONNECTING...</h2>
@@ -40,32 +35,36 @@
     </div>
 
     <script type="module">
-        // FIXED IMPORTS
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBqw_UnppBjz5qzMjHpusuuqMzMGN3HF-k",
             databaseURL: "https://philjeep-386fc-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 1. Setup Route from URL
         const params = new URLSearchParams(window.location.search);
         const myRoute = params.get('route') || 'punta-quiapo';
         document.getElementById("route-name").innerText = myRoute.replace('-', ' ').toUpperCase();
 
-        // 2. Ticket Logic
         const savedTicket = localStorage.getItem('user_ticket_' + myRoute);
         if (savedTicket) { showTicket(savedTicket); }
 
+        // SEQUENTIAL TICKET LOGIC
         document.getElementById("ticket-btn").addEventListener("click", () => {
-            // FIX: Math.floor(Math.random() * 100) starts the range from 0 to 99
-            const newTicket = Math.floor(Math.random() * 100); 
-            localStorage.setItem('user_ticket_' + myRoute, newTicket);
-            showTicket(newTicket);
+            const counterRef = ref(db, 'routes/' + myRoute + '/next_ticket');
+            
+            runTransaction(counterRef, (currentValue) => {
+                if (currentValue === null) return 1; // Start at 1
+                if (currentValue >= 99) return 1; // Reset to 1 after 99
+                return currentValue + 1; // Increment by 1
+            }).then((result) => {
+                const assignedNum = result.snapshot.val() - 1 || 1; 
+                localStorage.setItem('user_ticket_' + myRoute, assignedNum);
+                showTicket(assignedNum);
+            });
         });
 
         function showTicket(num) {
@@ -76,14 +75,22 @@
             display.style.display = "block";
         }
 
-        // 3. Real-time Firebase Listener
-        onValue(ref(db, 'routes/' + myRoute), (snapshot) => {
+        // Real-time Listener with Auto-Reset
+        onValue(ref(db, 'routes/' + myRoute + '/status'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                document.getElementById("loading-val").innerText = data.now_loading || "--";
+                const currentLoading = data.now_loading || "--";
+                document.getElementById("loading-val").innerText = currentLoading;
                 document.getElementById("eta-val").innerText = (data.eta || "0") + " MINS";
-            } else {
-                document.getElementById("eta-val").innerText = "NO DATA YET";
+
+                const mySavedTicket = localStorage.getItem('user_ticket_' + myRoute);
+                if (mySavedTicket && currentLoading.includes(mySavedTicket)) {
+                    setTimeout(() => {
+                        localStorage.removeItem('user_ticket_' + myRoute);
+                        alert("Ticket #" + mySavedTicket + " loaded! Safe travels.");
+                        location.reload();
+                    }, 5000);
+                }
             }
         });
     </script>
