@@ -7,20 +7,12 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f8f0ff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .container { width: 100%; max-width: 400px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 15px 35px rgba(75, 0, 130, 0.1); text-align: center; border: 2px solid #4B0082; }
-        
         #route-name { color: #4B0082; text-transform: uppercase; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; }
-        
-        /* Terminal Status Section */
         .status-box { background: #4B0082; color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
         #loading-val { font-size: 3.5rem; margin: 10px 0; color: #FFD700; }
-        
-        /* Personal Ticket Section (The Fix) */
         .my-ticket-section { border: 2px dashed #4B0082; padding: 15px; border-radius: 15px; margin-bottom: 20px; background: #fffdf0; }
         #ticket-num-display { font-size: 2.5rem; font-weight: bold; color: #4B0082; margin: 5px 0; display: none; }
         .btn-ticket { background: #FFD700; color: #4B0082; border: none; padding: 15px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; }
-        .btn-ticket:hover { background: #e6c200; }
-        
-        /* ETA Section */
         .eta-box { border: 2px solid #FFD700; padding: 15px; border-radius: 15px; color: #4B0082; }
         #eta-val { margin: 5px 0; color: #d32f2f; }
     </style>
@@ -40,3 +32,59 @@
             <div id="ticket-num-display">#--</div>
             <button class="btn-ticket" id="ticket-btn">GET TICKET NUMBER</button>
         </div>
+
+        <div class="eta-box">
+            <p style="margin:0; font-size: 0.9rem;">Next Jeep Arrival:</p>
+            <h2 id="eta-val">CONNECTING...</h2>
+        </div>
+    </div>
+
+    <script type="module">
+        // FIXED IMPORTS - These must have .js at the end
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqw_UnppBjz5qzMjHpusuuqMzMGN3HF-k",
+            databaseURL: "https://philjeep-386fc-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // 1. ROUTE SETUP
+        const params = new URLSearchParams(window.location.search);
+        const myRoute = params.get('route') || 'punta-quiapo';
+        document.getElementById("route-name").innerText = myRoute.replace('-', ' ').toUpperCase();
+
+        // 2. PERSONAL TICKET LOGIC
+        const savedTicket = localStorage.getItem('user_ticket_' + myRoute);
+        if (savedTicket) { showTicket(savedTicket); }
+
+        document.getElementById("ticket-btn").addEventListener("click", () => {
+            const newTicket = Math.floor(Math.random() * 99) + 1;
+            localStorage.setItem('user_ticket_' + myRoute, newTicket);
+            showTicket(newTicket);
+        });
+
+        function showTicket(num) {
+            document.getElementById("ticket-btn").style.display = "none";
+            document.getElementById("ticket-label").innerText = "YOUR TICKET:";
+            const display = document.getElementById("ticket-num-display");
+            display.innerText = "#" + num;
+            display.style.display = "block";
+        }
+
+        // 3. FIREBASE LISTENER
+        onValue(ref(db, 'routes/' + myRoute), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById("loading-val").innerText = data.now_loading || "--";
+                document.getElementById("eta-val").innerText = (data.eta || "0") + " MINS";
+            } else {
+                document.getElementById("eta-val").innerText = "NO DATA YET";
+            }
+        });
+    </script>
+</body>
+</html>
