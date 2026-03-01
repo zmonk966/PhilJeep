@@ -1,90 +1,66 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driver Console - Barkada-Bot</title>
+    <title>PhilJeep - Driver Console</title>
     <style>
-        body {
-            font-family: sans-serif;
-            background: #f4f0ff;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .card {
-            background: #4B0082;
-            color: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        select,
-        input {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            border: none;
-            font-size: 16px;
-        }
-
-        button {
-            width: 100%;
-            padding: 20px;
-            background: #FFD700;
-            color: #4B0082;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-        }
+        body { font-family: sans-serif; background: #f0f0f5; padding: 20px; text-align: center; }
+        .panel { background: white; max-width: 400px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid #4B0082; }
+        select, input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 18px; background: #4B0082; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; }
+        .reset-btn { background: #d32f2f; margin-top: 20px; padding: 10px; font-size: 0.8rem; }
     </style>
 </head>
-
 <body>
-    <div class="card">
-        <h2>Driver Control</h2>
+    <div class="panel">
+        <h2 style="color: #4B0082;">Driver Control</h2>
         <label>Select Route:</label>
         <select id="routeSelect">
-            <option value="punta-quiapo">Punta to Quiapo</option>
-            <option value="lealtad-quiapo">Lealtad to Quiapo</option>
+            <option value="punta-quiapo">Punta - Quiapo</option>
+            <option value="lealtad-quiapo">Lealtad - Quiapo</option>
         </select>
+        
+        <label>Now Loading (e.g., 1-10):</label>
+        <input type="text" id="loadingRange" placeholder="Example: 1 - 10">
+        
+        <label>ETA (mins):</label>
+        <input type="number" id="etaTime" placeholder="e.g. 5">
 
-        <label>Now Loading (e.g. 1-15):</label>
-        <input type="text" id="loadingRange" placeholder="1-15">
-
-        <label>ETA (minutes):</label>
-        <input type="number" id="etaTime" placeholder="5">
-
-        <button onclick="updateTerminal()">📢 SIGNAL ARRIVAL</button>
+        <button onclick="updateTerminal()">📢 SEND UPDATE</button>
+        <button class="reset-btn" onclick="resetQueue()">🔄 RESET TICKET COUNTER TO 1</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBqw_UnppBjz5qzMjHpusuuqMzMGN3HF-k",
-            databaseURL: "https://philjeep-386fc-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBqw_UnppBjz5qzMjHpusuuqMzMGN3HF-k", 
+            databaseURL: "https://philjeep-386fc-default-rtdb.asia-southeast1.firebasedatabase.app/" 
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.updateTerminal = function () {
+        window.updateTerminal = function() {
             const route = document.getElementById("routeSelect").value;
             const loading = document.getElementById("loadingRange").value;
             const eta = document.getElementById("etaTime").value;
 
-            set(ref(db, 'routes/' + route), {
+            set(ref(db, 'routes/' + route + '/status'), {
                 now_loading: loading,
                 eta: eta,
                 last_updated: Date.now()
-            }).then(() => alert("Route " + route + " Updated!"));
+            }).then(() => alert("Route Updated!"));
+        }
+
+        window.resetQueue = function() {
+            const route = document.getElementById("routeSelect").value;
+            if(confirm("Reset tickets to 1 for " + route + "?")) {
+                set(ref(db, 'routes/' + route + '/next_ticket'), 1)
+                .then(() => alert("Queue Reset!"));
+            }
         }
     </script>
 </body>
-
 </html>
