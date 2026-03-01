@@ -7,25 +7,23 @@
     <style>
         body { font-family: sans-serif; background: #f0f0f5; padding: 20px; text-align: center; }
         .panel { background: white; max-width: 400px; margin: auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid #4B0082; }
-        select, input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 18px; background: #4B0082; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; }
+        select, input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { width: 100%; padding: 18px; background: #4B0082; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .reset-btn { background: #d32f2f; margin-top: 20px; padding: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <div class="panel">
         <h2 style="color: #4B0082;">Driver Control</h2>
-        <label>Select Route:</label>
         <select id="routeSelect">
             <option value="punta-quiapo">Punta - Quiapo</option>
             <option value="lealtad-quiapo">Lealtad - Quiapo</option>
         </select>
         
-        <label>Now Loading (e.g., 1-10):</label>
-        <input type="text" id="loadingRange" placeholder="Example: 1 - 10">
+        <label style="font-size: 0.8rem;">Enter Range (e.g. 1-10) or Single Number:</label>
+        <input type="text" id="loadingRange" placeholder="Example: 1-10">
         
-        <label>ETA (mins):</label>
-        <input type="number" id="etaTime" placeholder="e.g. 5">
+        <input type="number" id="etaTime" placeholder="ETA in mins">
 
         <button onclick="updateTerminal()">📢 SEND UPDATE</button>
         <button class="reset-btn" onclick="resetQueue()">🔄 RESET TICKET COUNTER TO 1</button>
@@ -44,21 +42,20 @@
 
         window.updateTerminal = function() {
             const route = document.getElementById("routeSelect").value;
-            const loading = document.getElementById("loadingRange").value;
+            const loading = document.getElementById("loadingRange").value.replace(/\s/g, ''); // Remove spaces
             const eta = document.getElementById("etaTime").value;
 
             set(ref(db, 'routes/' + route + '/status'), {
                 now_loading: loading,
                 eta: eta,
                 last_updated: Date.now()
-            }).then(() => alert("Route Updated!"));
+            }).then(() => alert("Range " + loading + " is now loading!"));
         }
 
         window.resetQueue = function() {
             const route = document.getElementById("routeSelect").value;
             if(confirm("Reset tickets to 1 for " + route + "?")) {
-                set(ref(db, 'routes/' + route + '/next_ticket'), 1)
-                .then(() => alert("Queue Reset!"));
+                set(ref(db, 'routes/' + route + '/next_ticket'), 1).then(() => alert("Reset Success!"));
             }
         }
     </script>
